@@ -57,6 +57,12 @@ function toBool(str)
 	return str === 'true'?true:(str === 'false'?false:null);
 }
 
+// rounds n to the lower nearest multiple of to
+function floorTo(n, to)
+{
+	return n - (n % to);
+}
+
 // toggles visibility of element
 function toggleVisibility(id)
 {
@@ -130,6 +136,17 @@ function getMasteries(name, region, successCallback, errorCallback)
 function resetMasteries(newMasteries)
 {
 	ACMV.masteries = newMasteries;
+	// adding all champions which have no mastery
+	championsWithMastery = [];
+	for(var i=0;i<ACMV.masteries.length;i++)
+		championsWithMastery.push(ACMV.masteries[i].championId);
+	for(var id in Champions.names)
+	{
+		if(championsWithMastery.indexOf(parseInt(id)) == -1)//even if id is sumeric, keys are strings
+		{
+			ACMV.masteries.push({championId:id,championLevel:0,championPoints:0,lastPlayTime:0,championPointsSinceLastLevel:0,championPointsUntilNextLevel:0,chestGranted:false});
+		}
+	}
 	updateMasteries();
 }
 
@@ -303,6 +320,8 @@ function buildMastery(mastery)
 	// champion
 	var champion = document.createElement('div');
 	addClassTo(champion, 'champion');
+	if(Champions.isFree(mastery.championId))
+	addClassTo(champion, 'free-champion');
 	container.appendChild(champion);
 	// champion icon
 	var iconContainer = document.createElement('div');
@@ -523,7 +542,7 @@ ACMV = {
 				return {id:id,name:((id?'Not in':'In') + ' custom list')};//TODO
 			},
 			level:function(m){
-				return {id:(5-m.championLevel),name:('Mastery level ' + m.championLevel)};
+				return {id:(5-m.championLevel),name:(m.championLevel==0?'No mastery':('Mastery level ' + m.championLevel))};
 			},
 			role:function(m){
 				var role = Champions.roles[m.championId][0];
@@ -532,17 +551,58 @@ ACMV = {
 			chest:function(m){
 				return ('chestGranted' in m && m.chestGranted)?{id:0,name:'Chest granted'}:{id:1,name:'Chest not granted'};
 			},
-			lastPlayedDay:function(m){//TODO better
-				var daysAgo = Math.floor((time() - m.lastPlayTime) / (1000*60*60*24));
-				return {id:daysAgo,name:daysAgo==0?'Last day':(daysAgo + ' day' + (daysAgo==1?'':'s') + ' ago')};
+			lastPlayedDay:function(m){
+				var oneDayMs = 1000*60*60*24;
+				var elapsed = (floorTo(time(), oneDayMs) - floorTo(m.lastPlayTime, oneDayMs)) / oneDayMs;
+				var name = '';
+				switch(elapsed)
+				{
+				case 0:
+					name = 'Today';
+					break;
+				case 1:
+					name = 'Yesterday';
+					break;
+				default:
+					name = elapsed + ' days ago';
+				}
+				return {id:elapsed,name:name};
 			},
 			lastPlayedWeek:function(m){
-				var weeksAgo = Math.floor((time() - m.lastPlayTime) / (1000*60*60*24*7));
-				return {id:weeksAgo,name:weeksAgo==0?'Last week':(weeksAgo + ' week' + (weeksAgo==1?'':'s') + ' ago')};
+				var oneWeekMs = 1000*60*60*24*7;
+				var offset = 1000*60*60*24*3;//because january 1st 1970 was a thursday, we need to offset the times so weeks start on monday
+				var elapsed = ((floorTo(time() + offset, oneWeekMs)) - (floorTo(m.lastPlayTime + offset, oneWeekMs))) / oneWeekMs;
+				var name = '';
+				switch(elapsed)
+				{
+				case 0:
+					name = 'This week';
+					break;
+				case 1:
+					name = 'Last week';
+					break;
+				default:
+					name = elapsed + ' weeks ago';
+				}
+				return {id:elapsed,name:name};
 			},
 			lastPlayedMonth:function(m){
-				var monthsAgo = Math.floor((time() - m.lastPlayTime) / (1000*60*60*24*30));
-				return {id:monthsAgo,name:monthsAgo==0?'Last month':(monthsAgo + ' month' + (monthsAgo==1?'':'s') + ' ago')};
+				var now = new Date();
+				var lastPlayed = new Date(m.lastPlayTime);
+				var elapsed = (now.getFullYear() - lastPlayed.getFullYear()) * 12 + now.getMonth() - lastPlayed.getMonth();
+				var name = '';
+				switch(elapsed)
+				{
+				case 0:
+					name = 'This month';
+					break;
+				case 1:
+					name = 'Last month';
+					break;
+				default:
+					name = elapsed + ' months ago';
+				}
+				return {id:elapsed,name:name};
 			},
 			grade:function(m){
 				if(!('highestGrade' in m))
@@ -555,6 +615,7 @@ ACMV = {
 
 for(var k in ACMV.sorting.filter)
 	ACMV.search.filter[k] = null;
+ACMV.search.filter.level = [1,2,3,4,5];
 
 Champions.isFree = function(championId){
 	return Champions.free.indexOf(championId) != -1;
