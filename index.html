@@ -11,7 +11,8 @@
 <script type="text/javascript" src="static/euw_en_US_champions.js"></script>
 <script type="text/javascript" src="js.js"></script>
 </head>
-<body>
+<body onload="onBodyLoaded()">
+<div id="for-the-cookie-law">This website uses local storage. By using this website you agree to our use of local storage. <span id="accept-cookies">Accept</span></div>
 <h1 id="main-title">Advanced Champion Mastery Viewer</h1>
 <noscript id="no-script">JavaScript must be enabled to use this page.</noscript>
 <form id="pick-name-form" onsubmit="submitSummoner();return false;">
@@ -29,7 +30,7 @@
 		<option value="ru">RU</option>
 		<option value="tr">TR</option>
 	</select>
-	<input id="submit-name" type="submit"/>
+	<input id="submit-name" type="submit" value="Go!"/>
 </form>
 <div id="loading">
 	<div>
@@ -56,24 +57,24 @@
 				<option value="false">Chest not granted</option>
 			</select>
 		</div>
-		<div id="search-filter-custom-list">
+		<div id="search-filter-customList">
 			<select onchange="updateSearchFilterSelectOne('customList', this, toBool)">
 				<option value="null" selected="1">Ignore custom list</option>
 				<option value="true">In custom list</option>
 				<option value="false">Not in custom list</option>
 			</select>
 		</div><br>
-		<div id="search-filter-not-played-before">
-			Played after <input/>
+		<div id="search-filter-notPlayedBefore">
+			Last played after <input/>
 		</div>
 		<script style="display:none;">
-			setDateInput(document.getElementById('search-filter-not-played-before').firstElementChild, 'notPlayedBefore');
+			setDateInput(document.getElementById('search-filter-notPlayedBefore').firstElementChild, 'notPlayedBefore');
 		</script>
-		<div id="search-filter-not-played-since">
-			Played before <input/>
+		<div id="search-filter-notPlayedSince">
+			Last played before <input/>
 		</div><br>
 		<script style="display:none;">
-			setDateInput(document.getElementById('search-filter-not-played-since').firstElementChild, 'notPlayedSince');
+			setDateInput(document.getElementById('search-filter-notPlayedSince').firstElementChild, 'notPlayedSince');
 		</script>
 		<div id="search-filter-level">
 			Mastery levels

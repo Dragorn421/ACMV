@@ -1,7 +1,7 @@
 <?php
 function getApiKey()
 {
-	return 'stuff';
+	return 'api key here';
 }
 
 function getDatabase()
@@ -10,7 +10,7 @@ function getDatabase()
 	if(isset($db))
 		return $db;
 	try {
-		$db = new PDO('stuff', 'stuff', 'stuff');
+		$db = new PDO('pdo url here', 'username here', 'password here');
 	} catch(Exception $e) {
 		exit('Exception: ' . $e->getMessage());
 	}

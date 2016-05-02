@@ -5,11 +5,30 @@ body {
 	color: #156499;
 }
 
+/* Obey the cookie law! Actually I use local storage but the same rules apply. */
+#for-the-cookie-law {
+	display: none;
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	line-height: 30px;
+	background: darkturquoise;
+	text-align: center;
+}
+
+#accept-cookies {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+/* ACMV title */
 #main-title {
 	text-align: center;
 	font-size: 3em;
 }
 
+/* if javascript is disabled, disable the use of the site */
 #no-script {
 	position: fixed;
 	left: 0;
@@ -26,6 +45,26 @@ body {
 	content: '';
 	display: block;
 	height: 30%;
+}
+
+/* selects */
+#region-picker, #search-filter > * > select {
+	height: 32px;
+	padding-left: 5px;
+	appearance: none;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	box-shadow: none;
+	border: none;
+	outline: none;
+	background: transparent;
+	background-image: none;
+	color: #156499;
+}
+
+#region-picker, #search-filter > * > select:not([multiple]) {
+	outline: 2px solid #156499;
+	background: rgba(0,0,0,0.1);
 }
 
 /* name picker */
@@ -65,7 +104,7 @@ body {
 }
 
 #region-picker {
-	height: 30px;
+	height: 25px;
 	margin-left: 10px;
 }
 
@@ -159,21 +198,41 @@ body {
 	vertical-align: middle;
 }
 
-#search-filter > * > select, #search-filter > * > select > option {
-	background-color: transparent;
-}
-
 #search-filter > * > select {
-	height: 30px;
-    overflow: visible;
-	border: none;
+	overflow: visible;
 }
 
 #search-filter > * > select:not([multiple]) {
-	width: 130px;
+	width: 150px;
 }
 
-#search-filter > * > select > option {
+#search-filter-free, #search-filter-chest, #search-filter-customList {
+	position: relative;
+}
+
+#search-filter-free:after, #search-filter-chest:after, #search-filter-customList:after {
+	content: '▾';
+	position: absolute;
+	right: 12px;
+	top: 4px;
+	width: 0;
+	height: 0;
+	display: block;
+	z-index: -1;
+}
+
+#search-filter > * > input {
+	height: 20px;
+	vertical-align: middle;
+	padding: 5px;
+	margin: 0;
+	border: none;
+	outline: 2px solid #156499;
+	background: rgba(0,0,0,0.1);
+	color: #156499;
+}
+
+#search-filter > * > select[multiple] > option {
 	display: inline-block;
 	min-width: 17px;
 	height: 20px;
@@ -183,8 +242,38 @@ body {
 	text-align: center;
 }
 
-#search-filter > * > select > option + option {
+#search-filter > * > select[multiple] > option + option {
 	border-left: none;
+}
+
+/* rome calendar style */
+.rd-container {
+	background-color: #19B5FE !important;
+}
+
+.rd-back:before, .rd-next:before {
+	content: '➔' !important;
+	color: #156499;
+}
+
+.rd-back:before {
+	margin-top: 4px;
+	margin-left: 5px;
+	transform: rotate(180deg);
+}
+
+.rd-next:before {
+	margin-top: 2px;
+	margin-right: 5px;
+}
+
+.rd-day-prev-month, .rd-day-next-month {
+	color: #575757 !important;
+}
+
+.rd-day-selected, .rd-time-selected {
+	background-color: #156499 !important;
+	color: #19B5FE !important;
 }
 
 /* sort */
@@ -242,7 +331,7 @@ body {
 
 /* masteries groups */
 .group {
-    margin: 0 auto;
+    margin: 5px auto 0 auto;
 }
 
 /* masteries */
@@ -311,11 +400,40 @@ body {
 	display: none;
 }
 
-.champion:hover + .mastery-info, .mastery-info:hover {
+.mastery-xp, .mastery-level-progress, .mastery-highest-grade {
+	height: 30px;
+}
+
+.mastery-level-progress {
+	font-size: 12px;
+}
+
+.custom-list-edit {
+	position: absolute;
+	top: 70px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    font-weight: bold;
+    font-size: 20px;
+	cursor: pointer;
+	z-index: 1;
+}
+
+.progress-circular {
+	position: relative;
+	top: -90px;
+}
+
+.mastery-element:hover > .mastery-info {
 	display: block;
 }
 
 /* footer */
 #footer {
 	margin: 5px;
+}
+
+#footer > a {
+	color: inherit;
 }

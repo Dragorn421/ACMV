@@ -14,6 +14,9 @@ of Riot Games, Inc. League of Legends © Riot Games, Inc.
 ### Modify files
 You need an API key provided by Riot Games and an access to a database.  
 Use these to complete the base.php file in the include directory.  
+You need to replace `ABSOLUTE path to ACMV root folder here` in `cleancache.php` and `updatestaticdata.php` by the **absolute** path
+leading to the folder where ACMV files are. You need to because otherwise php executed from CRON wouldn't be in the right working directory.  
+**Note that the absolute path you put *must* end with a file separator, or it won't work.**
 
 ### Forbid access to include directory
 The include directory should not be accessible by a visitor. Depending on the web server you may use a .htaccess or something else.  
@@ -40,5 +43,8 @@ I mentioned the use of a database. This database should contain a table like thi
 `ALTER TABLE lolmasteries ADD UNIQUE (name,region)`  
 The `id` column is not needed for the whole thing to work but is definitely recommended for speed purposes.
 
-### Soon: CRON setup
-Not using CRON at the moment, will be coming.
+### CRON setup
+To remove all masteries cached that didn't get updated since at least half a hour, every hour:  
+```0 * * * * php -f /var/www/brallos.tk/lol/acmv/include/cleancache.php > /dev/null```  
+To update champions data for each region, every 4 hours (includes names, free rotation...):  
+```0 */4 * * * php -f /var/www/brallos.tk/lol/acmv/include/updatestaticdata.php > /dev/null```

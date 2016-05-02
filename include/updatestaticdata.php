@@ -42,11 +42,13 @@ function updateChampionsData($region, $locale, $out)
 	file_put_contents($out, $championsStaticData);
 }
 
-require('base.php');
+$rootDir = 'ABSOLUTE path to ACMV root folder here';
 
-$outputDir = '../static/';
+require($rootDir . 'include/base.php');
 
-$locales = ['en_US','fr_FR'];
+$outputDir = $rootDir . 'static/';
+
+$locales = ['en_US'/*,'fr_FR'*/];
 $endpoints = getEndpoints();
 // iterate through locales then region, may be better for rate limit
 foreach($locales as $locale)
