@@ -1,7 +1,7 @@
 # ACMV
 Advanced Champion Mastery Viewer - A LoL-themed website showing masteries of summoners  
 
-Here is the [live web page](http://brallos.tk/lol/acmv/) (remember this still is work in progress)  
+Here is the [live web page](http://brallos.tk/lol/acmv/)  
 
 I'm making use of [Rome](https://github.com/bevacqua/rome).  
 
@@ -13,8 +13,8 @@ of Riot Games, Inc. League of Legends © Riot Games, Inc.
 ## How to setup
 ### Modify files
 You need an API key provided by Riot Games and an access to a database.  
-Use these to complete the base.php file in the include directory.  
-You need to replace `ABSOLUTE path to ACMV root folder here` in `cleancache.php` and `updatestaticdata.php` by the **absolute** path
+Complete the base.php file in the include directory with the right database access.  
+You need to replace `/var/www/brallos.tk/lol/acmv/` in `cleancache.php` and `updatestaticdata.php` by the **absolute** path
 leading to the folder where ACMV files are. You need to because otherwise php executed from CRON wouldn't be in the right working directory.  
 **Note that the absolute path you put *must* end with a file separator, or it won't work.**
 
@@ -29,7 +29,28 @@ I use Apache2 and I put in the virtual host file this (replace "/path to acmv ro
 ```
 
 ### Database setup
-I mentioned the use of a database. This database should contain a table like this one, named `lolmasteries`:
+I mentioned the use of a database. This database should contain two tables.
+
+#### The acmvconfig table
+This table is used as configuration by ACMV.  
+There should be a table named `acmvconfig` like this:
+
+|Column   |Type        |Null|Default|Comment                            |
+|---------|------------|----|-------|-----------------------------------|
+|name     |varchar(32) |No  |None   |Primary key, collate: utf8_bin     |
+|value    |text        |No  |None   |Collate: utf8_bin                  |
+
+The name column doesn't have to be primary, it shouldn't make any difference given the size of the table.  
+This table must contain two rows so ACMV works:
+
+|name       |value         |Comment                                   |
+|-----------|--------------|------------------------------------------|
+|apikey     |<your api key>|The api key that will be used by ACMV     |
+|nextrequest|0             |Used to ensure that rate limit is exceeded|
+
+#### The lolmasteries table
+This table is used as a cache for summoner masteries.  
+There should be a table named `lolmasteries` like this:
 
 |Column   |Type        |Null|Default|Comment                            |
 |---------|------------|----|-------|-----------------------------------|
