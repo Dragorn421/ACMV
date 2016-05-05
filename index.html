@@ -15,7 +15,7 @@
 <div id="for-the-cookie-law">This website uses local storage. By using this website you agree to our use of local storage. <span id="accept-cookies">Accept</span></div>
 <h1 id="main-title">Advanced Champion Mastery Viewer</h1>
 <noscript id="no-script">JavaScript must be enabled to use this page.</noscript>
-<form id="pick-name-form" onsubmit="submitSummoner();return false;">
+<form id="pick-name-form" onsubmit="return false;">
 	<input id="name-input" type="text" placeholder="Enter summoner name" autocomplete="off"/>
 	<select id="region-picker">
 		<option value="br">BR</option>
@@ -32,6 +32,9 @@
 	</select>
 	<input id="submit-name" type="submit" value="Go!"/>
 </form>
+<div id="toggle-help-container">
+	<span id="toggle-help">Show help</span>
+</div>
 <div id="loading">
 	<div>
 		<div class="square square-1"></div>
@@ -41,7 +44,7 @@
 	</div>
 </div>
 <div id="search-form">
-	<div class="subtitle" onclick="toggleVisibility('search-filter')">Filter</div><br>
+	<div id="search-filter-title" class="subtitle" onclick="toggleVisibility('search-filter')">Filter</div><br>
 	<div id="search-filter">
 		<div id="search-filter-free">
 			<select onchange="updateSearchFilterSelectOne('free', this, toBool)">
@@ -121,7 +124,7 @@
 			</select>
 		</div>
 	</div>
-	<div class="subtitle" onclick="toggleVisibility('search-sort')">Sort</div><br>
+	<div id="search-sort-title" class="subtitle" onclick="toggleVisibility('search-sort')">Sort</div><br>
 	<div id="search-sort">
 		<div id="search-sort-stack"></div>
 		<div id="search-sort-unused-criteria"></div>
@@ -129,7 +132,7 @@
 	<script style="display:none;">
 		updateSorter();
 	</script>
-	<div class="subtitle" onclick="toggleVisibility('search-group')">Group</div><br>
+	<div id="search-group-title" class="subtitle" onclick="toggleVisibility('search-group')">Group</div><br>
 	<div id="search-group">
 		Group by
 		<select onchange="updateSearchGroup(this)">

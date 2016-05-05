@@ -29,6 +29,30 @@ function removeClassFrom(element, className)
 	}
 }
 
+// get GET parameters
+// from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+function getParameterByName(name, url)
+{
+	if(!url)
+		url = window.location.href;
+	name = name.replace(/[\[\]]/g, "\\$&");
+	var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+		results = regex.exec(url);
+	if(!results)
+		return null;
+	if(!results[2])
+		return '';
+	return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+// set a new get query
+function setGetQuery(query)
+{
+	var url = 'http://' + window.location.host + window.location.pathname + query;
+	if(window.location.href.toLowerCase() != url.toLowerCase())// so there aren't multiple times the same summoner in a row
+		window.history.pushState(null, '', url);
+}
+
 // IE is the worst
 // from http://stackoverflow.com/questions/19999388/check-if-user-is-using-ie-with-jquery/21712356#21712356
 function detectIE()
@@ -99,6 +123,134 @@ function toggleVisibility(id)
 		e.style.display = 'none';
 	else
 		e.style.display = '';
+}
+
+// integrated help
+function setShowHelp(help)
+{
+	if(help)
+	{
+		// add the help elements
+		var helpElements = ACMV.help.elements;
+		for(var i=0;i<helpElements.length;i++)
+		{
+			var h = helpElements[i];
+			var helpContainer = document.createElement('div');
+			helpContainer.id = 'help-for-' + h.attachTo + (('n' in h)?h.n:'');
+			addClassTo(helpContainer, 'integrated-help');
+			document.body.appendChild(helpContainer);
+			helpContainer.appendChild(document.createTextNode(h.text));
+			if('textAlign' in h)
+				helpContainer.style.textAlign = h.textAlign;
+			if('maxWidth' in h)
+				helpContainer.style.maxWidth = h.maxWidth + ((typeof h.maxWidth == 'number')?'px':'');
+		}
+		// put some spaces for the help elements
+		var putSpace = ACMV.help.putSpace;
+		for(var i=0;i<putSpace.length;i++)
+		{
+			for(var j=0;j<putSpace[i].elements.length;j++)
+				document.getElementById(putSpace[i].elements[j]).style['margin-' + putSpace[i].side] = putSpace[i].space + 'px';
+		}
+		// make the positions update
+		window.addEventListener('resize', function(){
+			updateIntegratedHelpPositions();
+		});
+		updateIntegratedHelpPositions();
+	}
+	else
+	{
+		window.removeEventListener('resize', updateIntegratedHelpPositions);
+		// remove all help
+		var helpElements = document.getElementsByClassName('integrated-help');
+		while(helpElements.length != 0)// helpElements is a HTMLCollection, not an array
+			removeElement(helpElements[0]);
+		// remove spaces for the help elements
+		var putSpace = ACMV.help.putSpace;
+		for(var i=0;i<putSpace.length;i++)
+		{
+			for(var j=0;j<putSpace[i].elements.length;j++)
+				document.getElementById(putSpace[i].elements[j]).style['margin-' + putSpace[i].side] = '';
+		}
+	}
+}
+
+function updateIntegratedHelpPositions()
+{
+	var helpElements = ACMV.help.elements;
+	// get x scrolling
+	var scrollX = 0;
+	if('pageXOffset' in window)
+		scrollX = window.pageXOffset;
+	else if('scrollX' in window)
+		scrollX = window.scrollX;
+	else if('scrollLeft' in document.body)
+		scrollX = document.body.scrollLeft;
+	// get y scrolling
+	var scrollY = 0;
+	if('pageYOffset' in window)
+		scrollY = window.pageYOffset;
+	else if('scrollY' in window)
+		scrollY = window.scrollY;
+	else if('scrollTop' in document.body)
+		scrollY = document.body.scrollTop;
+	for(var i=0;i<helpElements.length;i++)
+	{
+		var h = helpElements[i];
+		var attach = document.getElementById(h.attachTo),
+			helpContainer = document.getElementById('help-for-' + h.attachTo + (('n' in h)?h.n:''));
+		// if attached element exists
+		if(attach)
+		{
+			for(var j=0;j<2;j++)// do it two times because moving the element changes its size
+			{
+				var attachPosition = attach.getBoundingClientRect(),
+					helpContainerPosition = helpContainer.getBoundingClientRect();
+				var x = 0, y = 0;
+				// horizontal align
+				switch(h.align)
+				{
+				case 'left':
+					x = attachPosition.left;
+					break;
+				case 'center':
+					x = attachPosition.left + (attachPosition.width - helpContainerPosition.width) / 2;
+					break;
+				case 'right':
+					x = attachPosition.right - helpContainerPosition.width;
+					break;
+				}
+				// vertical align
+				switch(h.verticalAlign)
+				{
+				case 'top':
+					y = attachPosition.top - helpContainerPosition.height - 5;
+					break;
+				case 'middle':
+					y = attachPosition.top + (attachPosition.height - helpContainerPosition.height) / 2;
+					break;
+				case 'bottom':
+					y = attachPosition.bottom + 5;
+					break;
+				}
+				x += scrollX;
+				y += scrollY;
+				// set coordinates of div
+				helpContainer.style.left = x + 'px';
+				helpContainer.style.right = '';
+				helpContainer.style.top = y + 'px';
+				helpContainer.style.bottom = '';
+			}
+		}
+		// if attached element is not present, hide help
+		else
+		{
+			helpContainer.style.left = '';
+			helpContainer.style.right = '0';
+			helpContainer.style.top = '';
+			helpContainer.style.bottom = '0';
+		}
+	}
 }
 
 // custom list
@@ -229,8 +381,8 @@ function resetMasteries(newMasteries)
 	}
 	for(var id in Champions.names)
 	{
-		id = parseInt(id);
-		if(championsWithMastery.indexOf(id) == -1)//even if id is sumeric, keys are strings
+		id = parseInt(id);//even if id is numeric, keys are strings
+		if(championsWithMastery.indexOf(id) == -1)
 		{
 			ACMV.masteries.push({championId:id,championLevel:0,championPoints:0,lastPlayTime:0,championPointsSinceLastLevel:0,championPointsUntilNextLevel:0,chestGranted:false});
 		}
@@ -247,36 +399,51 @@ function restoreSearch(search)
 	else
 		ACMV.search = search;
 	// filter
-	for(var k in search.filter)
+	for(var k in ACMV.sorting.filter)
 	{
+		var filter = k in search.filter?search.filter[k]:null;
 		var input = document.getElementById('search-filter-' + k).firstElementChild;
 		if(input.tagName == 'INPUT')
 		{
-			if('rome' in input)
+			if(filter === null)
+				input.value = '';
+			else
 			{
-				if(search.filter[k])
+				if('rome' in input)
 				{
-					var date = new Date(search.filter[k]);
+					var date = new Date(filter);
 					input.rome.setValue(date);
 					input.rome.emitValues();
 					//newest	input.value = date.toString().split(' ')[1] + ' ' + date.getDay() + ', ' + date.getFullYear() + ' - ' + (date.getHours()>9?'':'0') + date.getHours() + ':' + (date.getMinutes()>9?'':'0') + date.getMinutes();
 					//default	input.value = date.getFullYear() + '-' + (date.getMonth()>8?'':'0') + (date.getMonth() + 1) + '-' + (date.getDate()>9?'':'0') + date.getDate() + ' ' + (date.getHours()>9?'':'0') + date.getHours() + ':' + (date.getMinutes()>9?'':'0') + date.getMinutes();
 				}
+				else
+					input.value = filter;
 			}
-			else
-				input.value = search.filter[k];
 		}
 		else if(input.tagName == 'SELECT')
 		{
-			// slice(0) clones the array (needed so in the end numbers don't become strings)
-			var select = input.multiple?search.filter[k].slice(0):[search.filter[k]];
-			if(!select)
-				select = [];
-			// convert values to string to allow comparison later
-			for(var i=0;i<select.length;i++)
-				select[i] += '';
-			for(var i=0;i<input.length;i++)
-				input[i].selected = select.indexOf(input[i].value) != -1;//set selected if in select list
+			if(filter === null)
+			{
+				// select none
+				for(var i=0;i<input.length;i++)
+					input[i].selected = false;
+				// if not multiple, select the first
+				if(!input.multiple)
+					input[0].selected = true;
+			}
+			else
+			{
+				// slice(0) clones the array (needed so in the end numbers don't become strings)
+				var select = input.multiple?filter.slice(0):[filter];
+				if(!select)
+					select = [];
+				// convert values to string to allow comparison with option values later
+				for(var i=0;i<select.length;i++)
+					select[i] += '';
+				for(var i=0;i<input.length;i++)
+					input[i].selected = select.indexOf(input[i].value) != -1;//set selected if in select list
+			}
 		}
 	}
 	// sort
@@ -293,6 +460,9 @@ function restoreSearch(search)
 function updateSearchFilterInput(filter, input, converter)
 {
 	ACMV.search.filter[filter] = converter != null?converter(input.value):input.value;
+	// do not keep null values
+	if(ACMV.search.filter[filter] === null)
+		delete(ACMV.search.filter[filter]);
 	updateMasteries();
 }
 
@@ -308,6 +478,9 @@ function updateSearchFilterSelectOne(filter, select, converter)
 		}
 	}
 	ACMV.search.filter[filter] = v;
+	// do not keep null values
+	if(ACMV.search.filter[filter] === null)
+		delete(ACMV.search.filter[filter]);
 	updateMasteries();
 }
 
@@ -320,6 +493,9 @@ function updateSearchFilterSelectMultiple(filter, select, converter)
 			selected.push(converter != null?converter(select[i].value):select[i].value);
 	}
 	ACMV.search.filter[filter] = selected;
+	// do not keep null values
+	if(ACMV.search.filter[filter] === null)
+		delete(ACMV.search.filter[filter]);
 	updateMasteries();
 }
 
@@ -327,11 +503,14 @@ function isFiltered(mastery)
 {
 	for(var k in ACMV.search.filter)
 	{
-		var f = ACMV.search.filter[k];
-		if(f !== null)
+		// if filter is set (not ignored)
+		if(k in ACMV.search.filter)
 		{
+			var f = ACMV.search.filter[k];
+			// if filter value is boolean
 			if(f === true || f === false)
 			{
+				// can't return the output of the function directly, we want to return false only at the end if the mastery didn't get filtered at all
 				if(ACMV.sorting.filter[k](mastery) !== f)
 					return true;
 			}
@@ -497,7 +676,7 @@ function buildMastery(mastery)
 	champion.appendChild(iconContainer);
 	var icon = document.createElement('img');
 	iconContainer.appendChild(icon);
-	icon.src = 'http://ddragon.leagueoflegends.com/cdn/6.7.1/img/champion/' + Champions.keys[mastery.championId] + '.png';
+	icon.src = 'http://ddragon.leagueoflegends.com/cdn/' + ACMV.currentPatch + '/img/champion/' + Champions.keys[mastery.championId] + '.png';
 	icon.alt = Champions.names[mastery.championId] + ' icon';
 	// mastery icon
 	var masteryIcon = document.createElement('img');
@@ -639,11 +818,13 @@ function submitSummoner()
 			region = regionPicker[i].value;
 			break;
 		}
+	setGetQuery('?s=' + encodeURIComponent(name.toLowerCase()) + (region=='euw'?'':'&r=' + encodeURIComponent(region)));
 	showMasteries(name, region);
 }
 
 function onBodyLoaded()
 {
+	//TODO maybe rework inputs
 	if(detectIE() !== false)
 		alert('You seem to be using Internet Explorer or Edge. These navigators don\'t work too well with ACMV. You have been warned!');
 	// when the cursor leaves a select before releasing click masteries do not update, this will at least rollback user changes to show him it didnt work
@@ -653,8 +834,9 @@ function onBodyLoaded()
 			restoreSearch();
 		}, 0);
 	});
+	// make it so masteries are equally spread
+	window.addEventListener('resize', spreadGroups);
 	// local storage
-	//TODO maybe rework inputs
 	if('localStorage' in window)
 	{
 		var localStorageAllowed = localStorage.getItem('localStorageAllowed') !== null;
@@ -672,12 +854,53 @@ function onBodyLoaded()
 	}
 	else
 		setEnableCustomList(false);
+	// 
+	var toggleHelp = document.getElementById('toggle-help');
+	toggleHelp.addEventListener('click', function(ev){
+		ACMV.help.shown = !ACMV.help.shown;
+		removeElement(ev.target.firstChild);
+		ev.target.appendChild(document.createTextNode(ACMV.help.shown?'Hide help':'Show help'));
+		setShowHelp(ACMV.help.shown);
+	});
+	// use default search
+	restoreSearch();
+	// enable name picker use
+	var pickNameForm = document.getElementById('pick-name-form');
+	pickNameForm.submit = function(){
+		submitSummoner();
+		return false;
+	};
+	pickNameForm.addEventListener('submit', pickNameForm.submit);
+	// check if query contains summoner
+	var summoner = getParameterByName('s');
+	if(summoner)
+	{
+		document.getElementById('name-input').value = summoner;
+		var region = getParameterByName('r');
+		if(region)
+			region = region.toLowerCase();
+		else
+			region = 'euw';
+		var regionPicker = document.getElementById('region-picker');
+		for(var i=0;i<regionPicker.length;i++)
+			if(regionPicker[i].value == region)
+			{
+				regionPicker[i].selected = true;
+				break;
+			}
+		pickNameForm.submit();
+	}
 }
 
 // main object: stores all needed data
 ACMV = {
 	// current user data
 	masteries:[],
+	defaultSearch:{
+		filter:{},// is set below
+		order:[],
+		group:''
+	},
 	search:{
 		filter:{},
 		order:[],
@@ -686,10 +909,41 @@ ACMV = {
 	enableCustomList:false,
 	customList:[],
 	// static data
+	currentPatch:Champions.patch,// set current patch based on champion data version
 	grades:['S+','S','S-','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-',''],
 	roles:['Assassin','Fighter','Mage','Marksman','Melee','Support','Tank'],
 	xpNeeded:[0,1800,4200,6600,9000,0],
 	xpNeededCumulated:[0,1800,6000,12600,21600,0],
+	// help
+	help:{
+		shown:false,
+		elements:[{attachTo:'name-input',					text:'1. Choose a summoner name',									align:'left',	verticalAlign:'top',						maxWidth:400},
+				{attachTo:'region-picker',					text:'2. Pick a region',											align:'center',	verticalAlign:'bottom',	textAlign:'center',	maxWidth:70},
+				{attachTo:'submit-name',					text:'3. Click here!',												align:'center',	verticalAlign:'top',	textAlign:'center',	maxWidth:70},
+				{attachTo:'search-filter-title',			text:'Here you can choose what champions should be shown or not.',	align:'center',	verticalAlign:'bottom',	textAlign:'center'},
+				{attachTo:'search-filter-free',				text:'Show only free or only not free champions.',					align:'center',	verticalAlign:'top',	textAlign:'center',	maxWidth:150},
+				{attachTo:'search-filter-chest',			text:'Show only champions whose chest has been granted or not.',	align:'center',	verticalAlign:'top',	textAlign:'center',	maxWidth:150},
+				{attachTo:'search-filter-customList',		text:'Show only champions who are or aren\'t in your custom list.',	align:'center',	verticalAlign:'top',	textAlign:'center',	maxWidth:150},
+				{attachTo:'search-filter-notPlayedBefore',	text:'Show only champions who were last played before this date.',	align:'right',	verticalAlign:'top',	textAlign:'right',	maxWidth:300},
+				{attachTo:'search-filter-notPlayedSince',	text:'Show only champions who were last played after this date.',	align:'left',	verticalAlign:'top',	textAlign:'right',	maxWidth:300},
+				{attachTo:'search-filter-level', n:0,		text:'Select multiple items by holding down click and drag the cursor, or press control then click to select/unselect one.',
+																																align:'left',	verticalAlign:'top',	textAlign:'left'},
+				{attachTo:'search-filter-level', n:1,		text:'Show only champions whose mastery level is selected.',		align:'right',	verticalAlign:'bottom',	textAlign:'right',	maxWidth:300},
+				{attachTo:'search-filter-role',				text:'Show only champions whose role is selected.',					align:'right',	verticalAlign:'bottom',	textAlign:'right',	maxWidth:300},
+				{attachTo:'search-filter-grade',			text:'Show only champions whose best grade is selected.',			align:'center',	verticalAlign:'top'},
+				{attachTo:'search-sort-title',				text:'Here you can choose the way the champions will be sorted. The champions are sorted using the criteria in the top-down order of the selected list. For example if you sort by Free then by Name it will put all the free champions first, ordered by name, then all the non-free champions, ordered by name too.',
+																																align:'center',verticalAlign:'bottom',	textAlign:'center'},
+				{attachTo:'search-group-title',				text:'Here you can group champions per criteria. Each group will be named after the criteria value, you can hide a group by clicking on the group name.',
+																																align:'center',verticalAlign:'bottom',	textAlign:'center'},
+				{attachTo:'content',						text:'Here are all the masteries of the summoner. When hovering a champion, you can see the mastery points earned, the current level progress, and the best grade with this champion if any. If you accepted the use of local storgae there is a + sign that will add the champion to your custom list. To remove a champion from your custom list click the - sign that appears instead of the +. This custom list is saved locally and will remain after you leave the page.',
+																																align:'center',	verticalAlign:'top'}],
+		putSpace:[	{elements:['search-filter-title'],	space:40,	side:'bottom'},
+					{elements:['search-sort-title'],	space:85,	side:'bottom'},
+					{elements:['search-group-title'],	space:65,	side:'bottom'},
+					{elements:['search-filter-free', 'search-filter-customList', 'search-filter-level', 'search-filter-role', 'search-filter-chest', 'search-filter-notPlayedSince', 'search-filter-notPlayedBefore', 'search-filter-grade'],
+														space:75,	side:'top'},
+					{elements:['content'],				space:150,	side:'top'}]
+	},
 	// current groups, to be used by spreadGroups() function
 	spreadGroups:[],
 	// all functions that allow filter/order/group of masteries
@@ -853,17 +1107,15 @@ ACMV = {
 	}
 };
 
-// default filters
-for(var k in ACMV.sorting.filter)
-	ACMV.search.filter[k] = null;
-ACMV.search.filter.level = [1,2,3,4,5];
-ACMV.search.filter.role = ACMV.roles;
-ACMV.search.filter.grade = ACMV.grades;
+// set default search (will be applied after the body loads)
+ACMV.defaultSearch.filter = {
+	level:[1,2,3,4,5],
+	role:ACMV.roles,
+	grade:ACMV.grades
+}
+ACMV.search = ACMV.defaultSearch;
 
 // add isFree()
 Champions.isFree = function(championId){
 	return Champions.free.indexOf(championId) != -1;
 };
-
-// make it so masteries are equally spread
-window.addEventListener('resize', spreadGroups);

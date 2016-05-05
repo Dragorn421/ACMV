@@ -47,6 +47,24 @@ body {
 	height: 30%;
 }
 
+/* integrated help */
+#toggle-help-container {
+	text-align: center;
+}
+
+#toggle-help {
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.integrated-help {
+	position: absolute;
+	line-height: 16px;
+	padding: 3px;
+	border: 2px solid;
+	border-radius: 5px;
+}
+
 /* selects */
 #region-picker, #search-filter > * > select {
 	height: 32px;
@@ -119,9 +137,14 @@ body {
 }
 
 /* loading animation */
+#loading {
+	transition: height 1s;
+	height: 0;
+}
+
 .loading {
 	text-align: center;
-	height: 50px;
+	height: 50px !important;
 	line-height: 50px;
 	vertical-align: middle;
 }
