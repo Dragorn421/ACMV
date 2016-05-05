@@ -43,10 +43,10 @@ There should be a table named `acmvconfig` like this:
 The name column doesn't have to be primary, it shouldn't make any difference given the size of the table.  
 This table must contain two rows so ACMV works:
 
-|name       |value         |Comment                                   |
-|-----------|--------------|------------------------------------------|
-|apikey     |<your api key>|The api key that will be used by ACMV     |
-|nextrequest|0             |Used to ensure that rate limit is exceeded|
+|name       |value                               |Comment                                   |
+|-----------|------------------------------------|------------------------------------------|
+|apikey     |xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx|The api key that will be used by ACMV     |
+|nextrequest|0                                   |Used to ensure that rate limit is exceeded|
 
 #### The lolmasteries table
 This table is used as a cache for summoner masteries.  
