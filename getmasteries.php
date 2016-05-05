@@ -89,6 +89,8 @@ if($masteries === '')
 	echo('An error occured while getting masteries');
 	exit();
 }
+// this is json
+header('Content-Type: application/json');
 // say the browser to cache the page for the amount of time before masteries update
 header('Cache-Control: max-age=' . $cacheTime);
 echo($masteries);

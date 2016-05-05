@@ -1,5 +1,5 @@
 <?php
-$rootDir = 'ABSOLUTE path to ACMV root folder here';
+$rootDir = '/var/www/brallos.tk/lol/acmv/';
 require($rootDir . 'include/base.php');
 $db = getDatabase();
 // remove cached masteries when older than half a hour
