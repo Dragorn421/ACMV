@@ -27,9 +27,10 @@ I use Apache2 and I put in the virtual host file this (replace "/path to acmv ro
     deny from all
 </Directory>
 ```
+You may want to use a .htaccess instead, remember using .htaccess is slower.
 
 ### Database setup
-I mentioned the use of a database. This database should contain two tables.
+I mentioned the use of a database. This database should contain two tables, one for configuration and one for caching.
 
 #### The acmvconfig table
 This table is used as configuration by ACMV.  
@@ -43,10 +44,10 @@ There should be a table named `acmvconfig` like this:
 The name column doesn't have to be primary, it shouldn't make any difference given the size of the table.  
 This table must contain two rows so ACMV works:
 
-|name       |value                               |Comment                                   |
-|-----------|------------------------------------|------------------------------------------|
-|apikey     |xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx|The api key that will be used by ACMV     |
-|nextrequest|0                                   |Used to ensure that rate limit is exceeded|
+|name       |value                               |Comment                                       |
+|-----------|------------------------------------|----------------------------------------------|
+|apikey     |xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx|The api key that will be used by ACMV         |
+|nextrequest|0                                   |Used to ensure that rate limit is not exceeded|
 
 #### The lolmasteries table
 This table is used as a cache for summoner masteries.  
@@ -65,6 +66,7 @@ There should be a table named `lolmasteries` like this:
 The `id` column is not needed for the whole thing to work but is definitely recommended for speed purposes.
 
 ### CRON setup
+Of course in the following lines you will have to replace `/var/www/brallos.tk/lol/acmv/` with your own ACMV root folder.  
 To remove all masteries cached that didn't get updated since at least half a hour, every hour:  
 ```0 * * * * php -f /var/www/brallos.tk/lol/acmv/include/cleancache.php > /dev/null```  
 To update champions data for each region, every 4 hours (includes names, free rotation...):  
