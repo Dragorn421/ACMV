@@ -5,8 +5,9 @@ function startsWith($haystack, $needle)
     return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== FALSE;
 }
 
-function getMasteries($name, $region, &$cacheTime)
+function getMasteries($name, $region, &$cacheTime, &$error)
 {
+	$error = FALSE;
 	// gets whatever is cached for the summoner from the given region
 	$nameKey = mb_strtolower(str_replace(' ', '', $name), 'utf8');
 	$db = getDatabase();
@@ -21,7 +22,10 @@ function getMasteries($name, $region, &$cacheTime)
 		$summonerInfo = requestAPI('https://' . $region . '.api.pvp.net/api/lol/' . $region . '/v1.4/summoner/by-name/' . str_replace('+', '%20', urlencode($name)) . '?api_key=' . getApiKey());
 		// if summoner isn't found / error
 		if($summonerInfo === NULL || !array_key_exists($nameKey, $summonerInfo))
-			$masteries = '';
+		{
+			$error = 'Summoner ' . htmlspecialchars($name) . ' not found.';
+			$masteries = $error;// need to save the error message for the others
+		}
 		else
 		{
 			// get the masteries
@@ -29,7 +33,10 @@ function getMasteries($name, $region, &$cacheTime)
 			$masteries = requestAPI('https://' . $region . '.api.pvp.net/championmastery/location/' . getEndpoints()[$region] . '/player/' . $summonerId . '/champions?api_key=' . getApiKey());
 			// if error (no masteries returns empty array)
 			if($masteries === NULL)
-				$masteries = '';
+			{
+				$error = 'Couldn\'t get masteries of ' . htmlspecialchars($name) . '.';
+				$masteries = $error;
+			}
 			else
 			{
 				// remove the summoner id from the data
@@ -40,6 +47,7 @@ function getMasteries($name, $region, &$cacheTime)
 		}
 		// got masteries, let's cache the result
 		$time = time();
+		$cacheTime = 1800;
 		// if the summoner wasn't cached
 		if($cached === FALSE)
 		{
@@ -58,9 +66,12 @@ function getMasteries($name, $region, &$cacheTime)
 	else
 	{
 		$masteries = $cached['masteries'];
-		$time = $cached['time'];
+		// if saved masteries are not an array, then what is saved is an error message
+		if($masteries[0] != '[')
+			$error = $masteries;
+		// the remaining time before an update can happen
+		$cacheTime = 1800 - (time() - $cached['time']);
 	}
-	$cacheTime = $time;
 	return $masteries;
 }
 
@@ -81,12 +92,12 @@ if(array_key_exists('region', $_GET) && array_key_exists($_GET['region'], getEnd
 	$region = $_GET['region'];
 
 // get masteries
-$masteries = getMasteries($name, $region, $cacheTime);
-// if masteries do not exist for this summoner from that region
-if($masteries === '')
+$masteries = getMasteries($name, $region, $cacheTime, $error);
+// if an error occured
+if($error)
 {
 	http_response_code(503);
-	echo('An error occured while getting masteries');
+	echo($error);
 	exit();
 }
 // this is json
