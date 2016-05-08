@@ -1,9 +1,11 @@
 # ACMV
-Advanced Champion Mastery Viewer - A LoL-themed website showing masteries of summoners  
+Advanced Champion Mastery Viewer - A LoL-themed website showing masteries of summoners.  
 
-Here is the [live web page](http://brallos.tk/lol/acmv/)  
+[Here is the live web page.](http://brallos.tk/lol/acmv/)  
 
 I'm making use of [Rome](https://github.com/bevacqua/rome).  
+
+The js.min.js file was made using [JSCompress](http://jscompress.com/).  
 
 ACMV isn't endorsed by Riot Games and doesn't reflect the views or opinions of
 Riot Games or anyone officially involved in producing or managing League of
@@ -19,18 +21,18 @@ leading to the folder where ACMV files are. You need to because otherwise php ex
 **Note that the absolute path you put *must* end with a file separator, or it won't work.**
 
 ### Forbid access to include directory
-The include directory should not be accessible by a visitor. Depending on the web server you may use a .htaccess or something else.  
-I use Apache2 and I put in the virtual host file this (replace "/path to acmv root" with the right path of course):  
+The include directory should not be accessible by a visitor. Depending on the web server you may use something else.  
+I use Apache2 and I put in the virtual host file this (replace `/path to acmv root` with the right path of course):  
 ```
 <Directory /path to acmv root/include/>
     Order deny,allow
     deny from all
 </Directory>
 ```
-You may want to use a .htaccess instead, remember using .htaccess is slower.
+You may want to use a .htaccess instead, remember using `.htaccess` files is slower.
 
 ### Database setup
-I mentioned the use of a database. This database should contain two tables, one for configuration and one for caching.
+I mentioned a database. This database should contain two tables, one for configuration and one for caching. These tables are described below.
 
 #### The acmvconfig table
 This table is used as configuration by ACMV.  
@@ -42,7 +44,7 @@ There should be a table named `acmvconfig` like this:
 |value    |text        |No  |None   |Collate: utf8_bin                  |
 
 The name column doesn't have to be primary, it shouldn't make any difference given the size of the table.  
-This table must contain two rows so ACMV works:
+This table must contain two entries so ACMV works:
 
 |name       |value                               |Comment                                       |
 |-----------|------------------------------------|----------------------------------------------|
@@ -61,7 +63,7 @@ There should be a table named `lolmasteries` like this:
 |masteries|text        |No  |None   |Collate: utf8_bin                  |
 |time     |int(11)     |No  |None   |                                   |
 
-**It is highly recommended to create a unique constraint for the couple (`name`, `region`):**  
+**It is highly recommended to create a unique constraint for the *couple* (`name`, `region`):**  
 `ALTER TABLE lolmasteries ADD UNIQUE (name,region)`  
 The `id` column is not needed for the whole thing to work but is definitely recommended for speed purposes.
 
