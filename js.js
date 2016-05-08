@@ -81,6 +81,62 @@ function removeElement(e)
 		e.parentNode.removeChild(e);
 }
 
+// get scrolling
+function getScrollX()
+{
+	if('pageXOffset' in window)
+		return window.pageXOffset;
+	else if('scrollX' in window)
+		return window.scrollX;
+	else if('scrollLeft' in document.body)
+		return document.body.scrollLeft;
+	return 0;
+}
+
+function getScrollY()
+{
+	if('pageYOffset' in window)
+		return window.pageYOffset;
+	else if('scrollY' in window)
+		return window.scrollY;
+	else if('scrollTop' in document.body)
+		return document.body.scrollTop;
+	return 0;
+}
+
+// scroll to content
+function scrollToContent()
+{
+	var content = getContentDiv();
+	// setting scroll animation parameters
+	ACMV.scroll = {};
+	ACMV.scroll.start = time();
+	ACMV.scroll.fromY = getScrollY();
+	// -50 because if the loading animation is shown it will move the page after disappearing
+	ACMV.scroll.offsetY = content.getBoundingClientRect().top - 50;
+	// wanted scroll speed: 2000 px/s -> v = d/t -> 2000 = offsetY/duration
+	// -> duration = offsetY/2000
+	// but duration should be mesured in milliseconds
+	// -> duration = offsetY/2000*1000 -> duration = offsetY/2
+	ACMV.scroll.duration = ACMV.scroll.offsetY / 2;
+	ACMV.scroll.intervalId = setInterval(function(){
+		// get elapsed time, check if animation should end
+		var elapsed = time() - ACMV.scroll.start;
+		if(elapsed > ACMV.scroll.duration)
+		{
+			clearInterval(ACMV.scroll.intervalId);
+			ACMV.scroll.intervalId = null;
+			return;
+		}
+		// change the new scroll height depending on elapsed time and previously set parameters
+		var y = ACMV.scroll.fromY + elapsed / ACMV.scroll.duration * ACMV.scroll.offsetY;
+		if('scrollTop' in document.body)
+			document.body.scrollTop = y;
+		else
+			window.scroll(getScrollX(), y);
+	},1000/60);// 60 fps
+}
+
 // spread children of element across the lines
 function spreadElements(parent, maxParentWidth, childWidth)
 {
@@ -178,22 +234,8 @@ function setShowHelp(help)
 function updateIntegratedHelpPositions()
 {
 	var helpElements = ACMV.help.elements;
-	// get x scrolling
-	var scrollX = 0;
-	if('pageXOffset' in window)
-		scrollX = window.pageXOffset;
-	else if('scrollX' in window)
-		scrollX = window.scrollX;
-	else if('scrollLeft' in document.body)
-		scrollX = document.body.scrollLeft;
-	// get y scrolling
-	var scrollY = 0;
-	if('pageYOffset' in window)
-		scrollY = window.pageYOffset;
-	else if('scrollY' in window)
-		scrollY = window.scrollY;
-	else if('scrollTop' in document.body)
-		scrollY = document.body.scrollTop;
+	// get scrolling
+	var scrollX = getScrollX(), scrollY = getScrollY();
 	for(var i=0;i<helpElements.length;i++)
 	{
 		var h = helpElements[i];
@@ -366,7 +408,9 @@ function getMasteries(name, region, successCallback, errorCallback)
 				errorCallback(xhr.status, xhr.responseText);
 		}
 	};
-	xhr.open('GET', 'getmasteries.php?name=' + encodeURIComponent(name) + '&region=' + region, true);
+	// using v parameter as a version number i can change as i want,
+	// so i can force the client cache to "forget" in case something happens
+	xhr.open('GET', 'getmasteries.php?v=1&name=' + encodeURIComponent(name) + '&region=' + region, true);
 	xhr.send();
 }
 
@@ -621,16 +665,24 @@ function updateSearchGroup(select)
 
 function groupMasteries(masteries)
 {
+	// if no grouping needed, return all masteries in the same group
 	if(ACMV.search.group == '')
-		return [{name:'',masteries:masteries}];
+		return [{	name: masteries.length + ' champion' + (masteries.length==1?'':'s'),
+					masteries: masteries}];
+	// group masteries
 	var groups = {};
 	for(var i=0;i<masteries.length;i++)
 	{
 		var k = ACMV.sorting.group[ACMV.search.group](masteries[i]);
+		// if group doesn't already exist, create it
 		if(typeof(groups[k.id]) === 'undefined')
-			groups[k.id] = {name:k.name,masteries:[]};
+			groups[k.id] = {name: k.name, masteries: []};
+		// add the mastery to the group
 		groups[k.id].masteries.push(masteries[i]);
 	}
+	// append champions amount for each group
+	for(var k in groups)
+		groups[k].name += ' (' + groups[k].masteries.length + ')';
 	return groups;
 }
 
@@ -761,12 +813,6 @@ function updateMasteries()
 			masteries.push(m);
 	}
 	var groups = groupMasteries(masteries);
-	var keys = Object.keys(groups);
-	if(keys.length == 1 && groups[keys[0]].name == '')
-	{
-		var champAmount = groups[keys[0]].masteries.length;
-		groups[keys[0]].name = champAmount + ' champion' + (champAmount==1?'':'s');
-	}
 	for(var k in groups)
 	{
 		if(groups[k].name != '')
@@ -801,9 +847,11 @@ function showMasteries(name, region)
 	getMasteries(name, region, function(result){
 		resetMasteries(JSON.parse(result));
 		setLoading(false);
+		scrollToContent();
 	}, function(code, result){
 		setContent('Error ' + code + ', got message:<br>' + result);
 		setLoading(false);
+		scrollToContent();
 	});
 }
 
