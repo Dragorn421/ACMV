@@ -81,6 +81,34 @@ function removeElement(e)
 		e.parentNode.removeChild(e);
 }
 
+// change static data origin
+function setStaticData(region, language)
+{
+	// if data already loaded
+	if((language in ACMV.champions) && (region in ACMV.champions[language]))
+	{
+		Champions = ACMV.champions[language][region];
+		return;
+	}
+	var scriptSrc = 'static/' + region + '_' + language + '_champions.js';
+	// http://stackoverflow.com/questions/8586446/dynamically-load-external-javascript-file-and-wait-for-it-to-load-without-usi
+	var script = document.createElement('script');
+	script.type = 'text/javascript';
+	script.onreadystatechange = script.onload = function() {
+		if(!script.readyState || /loaded|complete/.test(script.readyState))
+		{
+			// script has been executed, champions data has been updated
+			Champions.isFree = function(championId){
+				return Champions.free.indexOf(championId) != -1;
+			};
+			ACMV.champions[language][region] = Champions;
+			updateMasteries();
+		}
+	};
+	script.src = scriptSrc;
+	document.getElementsByTagName('head')[0].appendChild(script);
+}
+
 // get scrolling
 function getScrollX()
 {
@@ -844,6 +872,7 @@ function showMasteries(name, region)
 	if(name == '' || name.length < 4)
 		return;
 	setLoading(true);
+	setStaticData(region, 'en_US');
 	getMasteries(name, region, function(result){
 		resetMasteries(JSON.parse(result));
 		setLoading(false);
@@ -962,6 +991,7 @@ ACMV = {
 	roles:['Assassin','Fighter','Mage','Marksman','Melee','Support','Tank'],
 	xpNeeded:[0,1800,4200,6600,9000,0],
 	xpNeededCumulated:[0,1800,6000,12600,21600,0],
+	champions:{'en_US':{euw:Champions}},
 	// help
 	help:{
 		shown:false,
