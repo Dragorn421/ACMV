@@ -1,7 +1,7 @@
 # ACMV
 Advanced Champion Mastery Viewer - A LoL-themed website showing masteries of summoners.  
 
-[~~Here is the live web page.~~](http://brallos.tk/lol/acmv/) Removed because the API key is no longer valid.  
+[~~Here is the live web page.~~](http://brallos.pro/lol/acmv/) Removed because the API key is no longer valid.  
 
 I'm making use of [Rome](https://github.com/bevacqua/rome).  
 
